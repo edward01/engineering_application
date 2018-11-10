@@ -1,14 +1,41 @@
-*.pyc
-__pycache__/
+*.py[cod]
 
-instance/
+# C extensions
+*.so
 
-.pytest_cache/
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+__pycache__
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
 .coverage
-htmlcov/
+.tox
+nosetests.xml
 
-dist/
-build/
-*.egg-info/
+# Translations
+*.mo
 
-.vscode%
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+.env
+
+venv
+app.db
+feature_request.log*
