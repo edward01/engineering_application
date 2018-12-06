@@ -1,13 +1,491 @@
-{% extends "base.html" %}
-{% import 'bootstrap/wtf.html' as wtf %}
+<!doctype html>
+<html lang="en">
 
-{% block app_content %}
-    <h1>{{ _('Hi, %(username)s!', username=current_user.username) }}</h1>
-    {% if form %}
-    {{ wtf.quick_form(form) }}
-    <br>
-    {% endif %}
-    {% for post in posts %}
-        {% include '_post.html' %}
-    {% endfor %}
-{% endblock %}
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/datepicker.min.css') }}">
+    <title>Feature Request App</title>
+    <style>
+        body > .container {
+           padding: 60px 15px 0;
+        }
+        .back-to-top {
+            cursor: pointer;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display:none;
+        }
+        .datepicker-container {
+            z-index: 2000 !important;
+        }
+        .my-handle:hover {
+            cursor: grab;
+        }
+        .card .card-body {
+            border-bottom: 1px solid #ddd;
+        }
+        [data-bind="text: description"] {
+            max-height: 350px;
+            overflow-y:auto;
+        }
+        /* .highlight-entry {
+            border: 2px solid #007bff;
+        } */
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
+            <div class="d-lg-none">
+                <a class="btn btn-outline-success btn-sm" href="#entryModal"
+                    data-toggle="modal" data-mode="add" role="button" title="Add Entry"
+                    data-bind="click: setEmptyModal">
+                    <i class="fa fa-plus"></i>
+                </a>
+                <a class="navbar-brand" href="/">Client A</a>
+            </div>
+            <a class="navbar-brand d-none d-lg-block" href="/">Feature Request App</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarText">
+                <ul class="navbar-nav mr-auto" data-bind="foreach: available_clients">
+                    <li class="nav-item" data-bind="css: {active: value == $root.chosen_client()},
+                                                    click: $root.goToClient">
+                        <a class="nav-link" href="#" data-bind="text: text"> <span class="sr-only">(current)</span></a>
+                    </li>
+                    <!-- <li class="nav-item">
+                        <a class="nav-link" href="/">Client A <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Client B <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Client C <span class="sr-only">(current)</span></a>
+                    </li> -->
+
+                    <!-- <li class="nav-item active">
+                        <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/completed">Completed Items <span class="sr-only">(current)</span></a>
+                    </li> -->
+                </ul>
+                <form class="form-inline mt-2 mt-md-0 d-none d-lg-block">
+                    <a class="btn btn-outline-success" href="#entryModal"
+                        data-toggle="modal" data-mode="add" role="button"
+                        data-bind="click: setEmptyModal">
+                        <i class="fa fa-plus"></i> Add Entry
+                    </a>
+                </form>
+            </div>
+        </nav>
+    </header>
+
+
+    <div role="main" class="container col-md-8 offset-md-2">
+        <!-- <div class="row mb-1">
+            <div class="col-sm">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="inputGroupSelect01">Client</label>
+                    </div>
+                    <select data-bind="attr: {class: 'custom-select'},
+                            options: available_clients,
+                            optionsCaption: 'Choose...',
+                            optionsText: 'text',
+                            optionsValue: 'value',
+                            value: chosen_client">
+                    </select>
+                </div>
+            </div>
+            <div class="col-sm-2 text-right">
+                <a class="btn btn-outline-success btn-sm" href="#entryModal"
+                    data-toggle="modal" data-mode="add" role="button"
+                    data-bind="click: setEmptyModal, visible: chosen_client()">
+                    <i class="fa fa-plus"></i> Add Entry
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 offset-md-8 col-md-4 offset-lg-9 col-lg-3">
+                <a class="btn btn-outline-success btn-block" href="#entryModal"
+                    data-toggle="modal" data-mode="add" role="button"
+                    data-bind="click: setEmptyModal">
+                    <i class="fa fa-plus"></i> Add Entry
+                </a>
+            </div>
+        </div> -->
+
+        <div class="accordion mt-2" id="accordionItems" data-bind="foreach: sortedEntries">
+            <div class="card mb-2">
+                <div class="card-header" data-bind="attr: { id: 'heading'+id }">
+                    <div class="row">
+                        <div class="col-12 col-md-8">
+                            <h5 class="mb-0">
+                                <span class="badge badge-info my-handle"
+                                    data-bind="text: priority">
+                                    <!-- event: {mouseout: $root.priority_mouseout}"> -->
+                                </span>
+                                <button class="btn btn-link collapsed" type="button" data-toggle="collapse" aria-expanded="true"
+                                    data-bind="attr: { 'data-target': '#collapse'+id, 'aria-controls': '#collapse'+id }">
+                                    <span data-bind="text: title"></span>
+                                </button>
+                            </h5>
+                        </div>
+                        <div class="col-12  col-md-4">
+                            <small class="float-right">
+                                Target: <span data-bind="text: target_date"></span>
+                                <div class="badge badge-primary" data-bind="text: product_area"></div>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div data-bind="attr: { id: 'collapse'+id }" class="collapse" aria-labelledby="headingOne" data-parent="#accordionItems">
+                    <div class="card-body">
+                        <div data-bind="text: description"></div>
+                        <hr>
+                        <div class="text-right">
+                            <a class="btn btn-outline-warning btn-sm" href="#entryModal"
+                                data-toggle="modal" data-mode="edit" role="button"
+                                data-bind="click: $root.loadSelectedItem">Edit</a>
+                            <a class="btn btn-outline-danger btn-sm" href="#"role="button"
+                                data-bind="click: $root.removeRow">Delete</a>
+                            <a class="btn btn-outline-primary btn-sm" href="#"role="button">Mark as Complete</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="text-right" data-bind="visible: sortedEntries().length > 0">
+            <small class="font-italic">* Priority number can be drag up/down</small>
+        </p>
+        <div class="alert alert-warning text-center" role="alert" data-bind="visible: sortedEntries().length == 0 && chosen_client()">
+            <i class="fa fa-exclamation-triangle"></i> No records yet, try creating one
+        </div>
+        <!-- <div class="alert alert-info text-center" role="alert" data-bind="visible: !chosen_client()">
+            <i class="fa fa-exclamation-triangle"></i> Please select a client from the selection
+        </div> -->
+    </div>
+
+
+    <div class="modal fade" id="entryModal" tabindex="-1" role="dialog" aria-labelledby="entryModal" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form data-bind="submit: modalSubmit" method="POST" action="#" id="formSubmit">
+                    <div class="modal-header">
+                        <div class="row">
+                            <div class="col-12">
+                                <h5 class="modal-title"><span data-bind="text: modal_title"></span> Feature Request</h5>
+                            </div>
+                            <div class="col-12">
+                                <div class="badge badge-success" data-bind="text: chosen_client_text"></div>
+                            </div>
+                        </div>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+
+
+                    </div>
+                    <div class="modal-body" data-bind="with: selected_item_editable">
+                        {{ form.csrf_token }}
+                        {{ form.id(type="hidden", data_bind="value: id") }}
+                        {{ form.client(type="hidden", data_bind="value: client") }}
+                        <div class="form-group">
+                            {{ form.product_area.label }}
+                            <select name="product_area"
+                                data-bind="attr: {class: 'custom-select', required: true},
+                                options: $root.available_product_areas,
+                                optionsCaption: 'Choose...',
+                                optionsText: 'text',
+                                optionsValue: 'value',
+                                value: product_area">
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            {{ form.priority.label }}
+                            {{ form.priority(type="number", class="form-control",
+                                    data_bind="value: priority",
+                                    required=True) }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.title.label }}
+                            {{ form.title(class="form-control",
+                                    maxlength=50,
+                                    data_bind="value: title",
+                                    required=True) }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.description.label }}
+                            {{ form.description(class="form-control",
+                                    rows=3,
+                                    data_bind="value: description",
+                                    required=True) }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.target_date.label }} <small>(click the field to change)</small>
+                            {{ form.target_date(class="form-control",
+                                    data_bind="value: target_date",
+                                    required=True,
+                                    data_toggle="datepicker",
+                                    autocomplete="off",
+                                    readOnly=True,
+                                    placeholder="Click to choose date") }}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="alert mb-0" role="alert"
+                                data-bind="visible: alert_message() != '',
+                                css: {
+                                    'alert-success': alert_type() == 'alert-success',
+                                    'alert-danger': alert_type() == 'alert-danger'
+                                }">
+                            <span data-bind="html: alert_message"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-check"></i> Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <a id="back-to-top" href="#" class="btn btn-secondary btn-md back-to-top" role="button" title="Back to top" data-toggle="tooltip" data-placement="left"><span class="fa fa-chevron-up"></span></a>
+
+
+    <script src="{{ url_for('static', filename='js/jquery-3.3.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/moment-with-locales.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datepicker.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/knockout-min.js') }}"></script>
+    <!-- <script src="{{ url_for('static', filename='js/sortable.js') }}"></script> -->
+    <script src="{{ url_for('static', filename='js/knockout-sortable.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        let startDate = moment().format('L');
+
+        $(function () {
+            $('[data-toggle="datepicker"]').datepicker({
+                autoHide: true,
+                autoPick: true,
+                date: startDate,
+                startDate: startDate
+            });
+        });
+
+
+        // Class to represent a row
+        function FeatureRequestRow(data) {
+            var self = this;
+            self.id = data.id;
+            self.priority = ko.observable();
+            self.title = ko.observable();
+            self.description = ko.observable();
+            self.target_date = ko.observable();
+            self.client = ko.observable();
+            self.product_area = ko.observable();
+
+            self.update = function(data) {
+                self.priority(data.priority);
+                self.title(data.title);
+                self.description(data.description);
+                self.target_date(data.target_date);
+                self.client(data.client);
+                self.product_area(data.product_area);
+            }
+
+            self.update(data);
+        }
+
+
+        // Overall viewmodel for this screen, along with initial state
+        function FeatureRequestsViewModel() {
+            var self = this;
+
+            //----------------
+            // Selections
+            //----------------
+            let data_choices = JSON.parse("{{ data_choices|safe }}".replace(/'/g, '"'));
+            self.available_clients = data_choices.clients;
+            self.available_product_areas = data_choices.product_areas;
+
+            //----------------
+            // Main entries fields
+            //----------------
+            self.entries = ko.observableArray([]);
+            self.chosen_client = ko.observable();
+            self.chosen_product_area = ko.observable();
+            self.selected_item = ko.observable();
+            self.selected_item_editable = ko.observable();
+
+            //----------------
+            // Modal fields
+            //----------------
+            self.modal_title = ko.observable();
+            self.alert_message = ko.observable();
+            self.alert_type = ko.observable();
+
+            //----------------
+            // Computed data
+            //----------------
+            self.modal_title = ko.computed(function() {
+                if (self.selected_item_editable())
+                    return self.selected_item_editable().id == 0? 'New': 'Edit';
+                return '';
+            });
+            self.chosen_client_text = ko.computed(function() {
+                let elementPos = self.available_clients.map(function(x) {return x.value; }).indexOf(self.chosen_client());
+                if (elementPos >= 0)
+                    return self.available_clients[elementPos].text;
+                return '';
+            });
+            self.sortedEntries = ko.computed(function() {
+                return self.entries().sort(function (left, right) {
+                    return left.priority() == right.priority() ? 0 : (left.priority() < right.priority() ? -1 : 1);
+                });
+            });
+
+            //----------------
+            // Utilities
+            //----------------
+            function loadDefaultClient() {
+                let defaultClient = location.hash.replace('#', '');
+                if (defaultClient == '')
+                    self.goToClient(self.available_clients[0]);
+                else {
+                    let elementPos = self.available_clients.map(function(x) {return x.value; }).indexOf(defaultClient);
+                    if (elementPos >= 0)
+                        self.goToClient(self.available_clients[elementPos]);
+                }
+            }
+
+            //----------------
+            // Events
+            //----------------
+            self.modalSubmit = function() {
+                $.post("{{ url_for('main.index') }}", $('#formSubmit').serialize(), function (response) {
+                    if (response.success) {
+                        let selected_item = self.selected_item(),
+                            updatedItem = ko.toJS(self.selected_item_editable());
+                        if (self.selected_item_editable().id == 0) {
+                            // Add to collection
+                            self.entries.push(new FeatureRequestRow(updatedItem));
+                            self.setEmptyModal();  // clear modal fields
+                        }
+                        else {
+                            // Update collection
+                            selected_item.update(updatedItem);
+                        }
+                        // Post tasks
+                        self.alert_type('alert-success');
+                        self.alert_message('<i class="fa fa-exclamation-circle" aria-hidden="true"></i> Entries saved');
+                    }
+                    else {
+                        let errors = 'Check for the following errors:';
+                        $.each(response.errors, function(i, item) {
+                            errors += '<br>* '+ i +': '+ item;
+                        });
+                        self.alert_type('alert-danger');
+                        self.alert_message(errors);
+                    }
+                }).fail(function () {
+                    self.alert_type('alert-danger');
+                    self.alert_message('<i class="fa fa-exclamation-circle" aria-hidden="true"></i> Unable to save, please try again later');
+                }).always(function() {
+                    setTimeout(() => {
+                        self.alert_message('');
+                    }, 5000);
+                });
+            }
+            self.setEmptyModal = function() {
+                self.selected_item_editable(new FeatureRequestRow({
+                    id: 0,
+                    client: self.chosen_client(),
+                    target_date: startDate
+                }));
+            }
+            self.loadSelectedItem = function(item) {
+                self.selected_item(item);
+                self.selected_item_editable(new FeatureRequestRow(ko.toJS(item)));
+            }
+            self.removeRow = function(item) {
+                console.log(item.id);
+                self.entries.remove(item)
+            }
+            self.priority_mouseout = function() {
+                console.log('priority_mouseout');
+            }
+            self.goToClient = function(item) {
+                location.hash = item.value;
+                self.chosen_client(item.value);
+                $.getJSON("/feature-requests/"+item.value, function(data) {
+                    let entries = $.map(data, function(item) { return new FeatureRequestRow(item) });
+                    self.entries(entries);
+                });
+            }
+
+            //----------------
+            // Onload Event
+            //----------------
+            loadDefaultClient();
+        }
+        ko.applyBindings(new FeatureRequestsViewModel());
+
+
+        //---------------- [BACK TO TOP] ---------------------
+        $(window).scroll(function () {
+            if ($(this).scrollTop() > 50) {
+                $('#back-to-top').fadeIn();
+            } else {
+                $('#back-to-top').fadeOut();
+            }
+        });
+        $('#back-to-top').click(function () {
+            $('#back-to-top').tooltip('hide');
+            $('body,html').animate({
+                scrollTop: 0
+            }, 500);
+            return false;
+        });
+
+
+        //---------------- [JQUERY DRAGGABLE] ---------------------
+        // var sortable_items = document.getElementById('accordionItems');
+        // Sortable.create(sortable_items, {
+        //     handle: ".my-handle",
+        //     onEnd: function (evt) {
+        //         // console.log('-evt.item', evt.item);
+        //         console.log('-evt.from', evt.from);
+        //         console.log('-evt.to', evt.to);
+        //         console.log('-evt.oldIndex', evt.oldIndex);
+        //         console.log('-evt.newIndex', evt.newIndex);
+        //         // var itemEl = evt.item;  // dragged HTMLElement
+        //         // evt.to;    // target ist
+        //         // evt.from;  // previous list
+        //         // evt.oldIndex;  // element's old index within old parent
+        //         // evt.newIndex;  // element's new index within new parent
+
+        //     },
+        // });
+    </script>
+</body>
+
+</html>
+
+<!-- TODO
+    - change alert into toastr notification
+    *** - draggable item rows
+    - client dropdown should come from model
+    - product area dropdown should come from model
+    - priority should be ???
+    - main records retrieval should be ajax, filtered already by selected client
+    - single page app, add # on end of url
+-->
