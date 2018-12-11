@@ -1,8 +1,8 @@
-"""init db
+"""feature_requests table
 
-Revision ID: f4d140f9448c
+Revision ID: 79e9d8e57a9d
 Revises: 
-Create Date: 2018-11-22 19:21:58.208093
+Create Date: 2018-12-07 11:09:03.182415
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f4d140f9448c'
+revision = '79e9d8e57a9d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -26,12 +26,11 @@ def upgrade():
     sa.Column('target_date', sa.Date(), nullable=False),
     sa.Column('client', sa.String(length=20), nullable=False),
     sa.Column('product_area', sa.String(length=20), nullable=False),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('priority')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_feature_request_client'), 'feature_request', ['client'], unique=False)
     op.create_index(op.f('ix_feature_request_product_area'), 'feature_request', ['product_area'], unique=False)
-    op.create_index(op.f('ix_feature_request_title'), 'feature_request', ['title'], unique=True)
+    op.create_index(op.f('ix_feature_request_title'), 'feature_request', ['title'], unique=False)
     # ### end Alembic commands ###
 
 
