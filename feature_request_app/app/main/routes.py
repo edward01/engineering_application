@@ -74,7 +74,7 @@ def index():
 def feature_requests(client):
     items = FeatureRequest.query \
             .filter_by(client=client) \
-            .order_by(FeatureRequest.priority) \
+            .order_by(FeatureRequest.priority, FeatureRequest.target_date.desc()) \
             .all()
     return jsonify([item.to_dict() for item in items])
 

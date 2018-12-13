@@ -102,7 +102,7 @@
 
     <div role="main" class="container col-md-8 offset-md-2 invisible">
         <div class="activeItems" data-bind="visible: !showCompletedItems()">
-            <div class="accordion mt-2" id="accordionItems" data-bind="foreach: sortedEntries">
+            <div class="accordion mt-2" id="accordionItems" data-bind="foreach: active_entries">
                 <div class="card mb-2">
                     <div class="card-header" data-bind="attr: { id: 'heading'+id }">
                         <div class="row">
@@ -151,20 +151,47 @@
                     </div>
                 </div>
             </div>
-            <p class="text-right" data-bind="visible: sortedEntries().length > 0">
+            <p class="text-right" data-bind="visible: active_entries().length > 0">
                 <small class="font-italic">* Priority number can be drag up/down</small>
             </p>
-            <div class="alert alert-warning text-center" role="alert" data-bind="visible: sortedEntries().length == 0 && chosen_client()">
+            <div class="alert alert-warning text-center" role="alert" data-bind="visible: active_entries().length == 0 && chosen_client()">
                 <i class="fa fa-exclamation-triangle"></i> No records yet, try creating one
             </div>
         </div>
 
         <div class="completedItems" data-bind="visible: showCompletedItems()">
-            <div class="alert alert-success mt-2" role="alert">
+            <h4 class="alert alert-primary mt-2" role="alert">
                 <i class="fa fa-check" aria-hidden="true"></i> Completed Items
+            </h4>
+
+            <div class="accordion mt-2" id="accordionItems2" data-bind="foreach: completed_entries">
+                <div class="card mb-2">
+                    <div class="card-header" data-bind="attr: { id: 'heading'+id }">
+                        <div class="row">
+                            <div class="col-12 col-md-8">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse" aria-expanded="true"
+                                        data-bind="attr: { 'data-target': '#collapse'+id, 'aria-controls': '#collapse'+id }">
+                                        <span data-bind="text: title"></span>
+                                    </button>
+                                </h5>
+                            </div>
+                            <div class="col-12  col-md-4">
+                                <small class="float-right">
+                                    Target: <span data-bind="text: target_date"></span>
+                                    <div class="badge badge-primary" data-bind="text: product_area"></div>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div data-bind="attr: { id: 'collapse'+id }" class="collapse" aria-labelledby="headingOne" data-parent="#accordionItems2">
+                        <div class="card-body">
+                            <div data-bind="text: description"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <hr>
-            sdfsfds
         </div>
     </div>
     <div class="alert alert-light text-center" role="alert" data-bind="visible: showLoader">
@@ -322,7 +349,8 @@
             //----------------
             // Main entries fields
             //----------------
-            self.entries = ko.observableArray([]);
+            self.active_entries = ko.observableArray([]);
+            self.completed_entries = ko.observableArray([]);
             self.chosen_client = ko.observable();
             self.showLoader = ko.observable(true);
             self.showCompletedItems = ko.observable(false); // active|completed
@@ -348,11 +376,6 @@
                     return self.available_clients[elementPos].text;
                 return '';
             });
-            self.sortedEntries = ko.computed(function() {
-                return self.entries().sort(function (left, right) {
-                    return left.priority() == right.priority() ? 0 : (left.priority() < right.priority() ? -1 : 1);
-                });
-            });
 
             //----------------
             // Utilities
@@ -369,8 +392,15 @@
             }
             function ajaxGet() {
                 $.getJSON("/feature-requests/"+self.chosen_client(), function(data) {
-                    let entries = $.map(data, function(item) { return new FeatureRequestRow(item) });
-                    self.entries(entries);
+                    // let entries = $.map(data, function(item) { return new FeatureRequestRow(item) });
+                    let active_entries = [];
+                    let completed_entries = [];
+                    $.each(data, function (ctr, item) {
+                        if (item.priority > 0) active_entries.push(new FeatureRequestRow(item));
+                        else completed_entries.push(item);
+                    });
+                    self.active_entries(active_entries);
+                    self.completed_entries(completed_entries);
                     self.showLoader(false);
                     $('.invisible').removeClass('invisible');
                     if ($('.navbar-collapse').hasClass('show')) $('.navbar-toggler').click();
@@ -402,7 +432,7 @@
             //----------------
             self.modalSubmit = function() {
                 if (typeof self.selected_item_editable().priority() == 'undefined' || self.selected_item_editable().priority() == '')
-                    self.selected_item_editable().priority(self.entries().length + 1);
+                    self.selected_item_editable().priority(self.active_entries().length + 1);
                 ajaxPost({
                     url: "{{ url_for('main.index') }}",
                     params: $('#formSubmit').serialize(),
