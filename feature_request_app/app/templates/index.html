@@ -47,10 +47,22 @@
     <header>
         <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
             <div class="d-lg-none">
-                <a class="btn btn-success btn-sm" href="#entryModal"
-                    data-toggle="modal" data-mode="add" role="button" title="Add Entry"
+                <span data-toggle="modal" data-target="#entryModal" class="text-light">
+                    <a class="btn btn-success btn-sm"
+                        data-toggle="tooltip" data-mode="add" role="button" title="Add Entry"
                     data-bind="click: setEmptyModal">
                     <i class="fa fa-plus"></i>
+                </a>
+                </span>
+                <a class="btn btn-secondary btn-sm invisible" href="#"
+                    role="button" title="Show Completed Items"
+                    data-bind="click: showCompletedItems(true), visible: !showCompletedItems()">
+                    <i class="fa fa-check"></i>
+                </a>
+                <a class="btn btn-secondary btn-sm invisible" href="#"
+                    role="button" title="Show Active Items"
+                    data-bind="click: showCompletedItems(false), visible: showCompletedItems">
+                    <i class="fa fa-pencil"></i>
                 </a>
                 <a class="navbar-brand" data-bind="text: chosen_client_text,
                         attr: { href: '#'+chosen_client() }"></a>
@@ -67,6 +79,16 @@
                     </li>
                 </ul>
                 <form class="form-inline mt-2 mt-md-0 d-none d-lg-block">
+                    <a class="btn btn-secondary invisible" href="#"
+                        role="button"
+                        data-bind="click: showCompletedItems(true), visible: !showCompletedItems()">
+                        <i class="fa fa-check"></i> Show Completed Items
+                    </a>
+                    <a class="btn btn-secondary invisible" href="#"
+                        role="button"
+                        data-bind="click: showCompletedItems(false), visible: showCompletedItems">
+                        <i class="fa fa-pencil"></i> Show Active Items
+                    </a>
                     <a class="btn btn-success" href="#entryModal"
                         data-toggle="modal" data-mode="add" role="button"
                         data-bind="click: setEmptyModal">
@@ -79,52 +101,70 @@
 
 
     <div role="main" class="container col-md-8 offset-md-2 invisible">
-        <div class="accordion mt-2" id="accordionItems" data-bind="foreach: sortedEntries">
-            <div class="card mb-2">
-                <div class="card-header" data-bind="attr: { id: 'heading'+id }">
-                    <div class="row">
-                        <div class="col-12 col-md-8">
-                            <h5 class="mb-0">
-                                <span class="badge badge-info my-handle"
-                                    data-dragItem="priority"
-                                    data-bind="text: priority">
-                                </span>
-                                <button class="btn btn-link collapsed" type="button" data-toggle="collapse" aria-expanded="true"
-                                    data-bind="attr: { 'data-target': '#collapse'+id, 'aria-controls': '#collapse'+id }">
-                                    <span data-bind="text: title"></span>
-                                </button>
-                            </h5>
-                        </div>
-                        <div class="col-12  col-md-4">
-                            <small class="float-right">
-                                Target: <span data-bind="text: target_date"></span>
-                                <div class="badge badge-primary" data-bind="text: product_area"></div>
-                            </small>
+        <div class="activeItems" data-bind="visible: !showCompletedItems()">
+            <div class="accordion mt-2" id="accordionItems" data-bind="foreach: sortedEntries">
+                <div class="card mb-2">
+                    <div class="card-header" data-bind="attr: { id: 'heading'+id }">
+                        <div class="row">
+                            <div class="col-12 col-md-8">
+                                <h5 class="mb-0">
+                                    <span class="badge badge-info my-handle"
+                                        data-dragItem="priority"
+                                        data-bind="text: priority">
+                                    </span>
+                                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse" aria-expanded="true"
+                                        data-bind="attr: { 'data-target': '#collapse'+id, 'aria-controls': '#collapse'+id }">
+                                        <span data-bind="text: title"></span>
+                                    </button>
+                                </h5>
+                            </div>
+                            <div class="col-12  col-md-4">
+                                <small class="float-right">
+                                    Target: <span data-bind="text: target_date"></span>
+                                    <div class="badge badge-primary" data-bind="text: product_area"></div>
+                                </small>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div data-bind="attr: { id: 'collapse'+id }" class="collapse" aria-labelledby="headingOne" data-parent="#accordionItems">
-                    <div class="card-body">
-                        <div data-bind="text: description"></div>
-                        <hr>
-                        <div class="text-right">
-                            <a class="btn btn-outline-warning btn-sm" href="#entryModal"
-                                data-toggle="modal" data-mode="edit" role="button"
-                                data-bind="click: $root.loadSelectedItem"><i class="fa fa-pencil" aria-hidden="true"></i></a>
-                            <a class="btn btn-outline-danger btn-sm" href="#"role="button"
-                                data-bind="click: $root.removeRow"><i class="fa fa-times" aria-hidden="true"></i></a>
-                            <!-- <a class="btn btn-outline-primary btn-sm" href="#"role="button">Mark as Complete</a> -->
+                    <div data-bind="attr: { id: 'collapse'+id }" class="collapse" aria-labelledby="headingOne" data-parent="#accordionItems">
+                        <div class="card-body">
+                            <div data-bind="text: description"></div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-6">
+                                    <a class="btn btn-outline-success btn-sm" href="#" role="button"
+                                        data-bind="click: $root.completeRow"><i class="fa fa-check" aria-hidden="true"></i>
+                                        Mark as Complete</a>
+                                </div>
+                                <div class="col-6 text-right">
+                                    <a class="btn btn-outline-warning btn-sm" href="#entryModal"
+                                        data-toggle="modal" data-mode="edit" role="button"
+                                        data-bind="click: $root.loadSelectedItem"><i class="fa fa-pencil" aria-hidden="true"></i>
+                                        Edit</a>
+                                    <a class="btn btn-outline-danger btn-sm" href="#"role="button"
+                                        data-bind="click: $root.removeRow"><i class="fa fa-times" aria-hidden="true"></i>
+                                        Delete</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <p class="text-right" data-bind="visible: sortedEntries().length > 0">
+                <small class="font-italic">* Priority number can be drag up/down</small>
+            </p>
+            <div class="alert alert-warning text-center" role="alert" data-bind="visible: sortedEntries().length == 0 && chosen_client()">
+                <i class="fa fa-exclamation-triangle"></i> No records yet, try creating one
+            </div>
         </div>
-        <p class="text-right" data-bind="visible: sortedEntries().length > 0">
-            <small class="font-italic">* Priority number can be drag up/down</small>
-        </p>
-        <div class="alert alert-warning text-center" role="alert" data-bind="visible: sortedEntries().length == 0 && chosen_client()">
-            <i class="fa fa-exclamation-triangle"></i> No records yet, try creating one
+
+        <div class="completedItems" data-bind="visible: showCompletedItems()">
+            <div class="alert alert-success mt-2" role="alert">
+                <i class="fa fa-check" aria-hidden="true"></i> Completed Items
+            </div>
+            <hr>
+            sdfsfds
         </div>
     </div>
     <div class="alert alert-light text-center" role="alert" data-bind="visible: showLoader">
@@ -240,6 +280,7 @@
                 zIndex: 1000,
                 trigger: '.docs-datepicker-trigger',
             });
+            $('[data-toggle="tooltip"]').tooltip();
         });
 
 
@@ -282,16 +323,16 @@
             // Main entries fields
             //----------------
             self.entries = ko.observableArray([]);
-            self.showLoader = ko.observable(true);
             self.chosen_client = ko.observable();
-            self.chosen_product_area = ko.observable();
-            self.selected_item = ko.observable();
-            self.selected_item_editable = ko.observable();
+            self.showLoader = ko.observable(true);
+            self.showCompletedItems = ko.observable(false); // active|completed
 
             //----------------
             // Modal fields
             //----------------
             self.modal_title = ko.observable();
+            self.selected_item = ko.observable();
+            self.selected_item_editable = ko.observable();
 
             //----------------
             // Computed data
@@ -331,7 +372,7 @@
                     let entries = $.map(data, function(item) { return new FeatureRequestRow(item) });
                     self.entries(entries);
                     self.showLoader(false);
-                    $('[role="main"]').removeClass('invisible');
+                    $('.invisible').removeClass('invisible');
                     if ($('.navbar-collapse').hasClass('show')) $('.navbar-toggler').click();
                 });
             }
@@ -393,7 +434,7 @@
                 self.selected_item_editable(new FeatureRequestRow(ko.toJS(item)));
             }
             self.removeRow = function(item) {
-                if (confirm('Are you sure to delete this record? \nTitle: "'+ item.title() +'"')) {
+                notie.confirm({ text: 'Are you sure to delete this record? <br>"'+ item.title() +'"' }, function() {
                     ajaxPost({
                         url: Flask.url_for("main.delete", {"id": item.id}),
                         params: {csrf_token: "{{ csrf_token() }}"},
@@ -402,7 +443,19 @@
                         },
                         success_message: 'Selected record has been deleted'
                     });
-                }
+                });
+            }
+            self.completeRow = function(item) {
+                notie.confirm({ text: 'Mark this record as complete? <br>"'+ item.title() +'"' }, function() {
+                    ajaxPost({
+                        url: Flask.url_for("main.complete", {"id": item.id}),
+                        params: {csrf_token: "{{ csrf_token() }}"},
+                        success_callback: function() {
+                            ajaxGet();
+                        },
+                        success_message: 'Selected record has been completed'
+                    });
+                });
             }
             self.dragNewPriority = function(current_priority, new_priority) {
                 ajaxPost({
@@ -467,6 +520,7 @@
 </html>
 
 <!-- TODO
+    - completed/active items -> should be button dropdown
     ------------- can accept empty priority => will assign last priority on backend
     ------------- draggable/sortable item rows
     ------------- client dropdown should come from model

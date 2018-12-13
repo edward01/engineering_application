@@ -101,6 +101,17 @@ def delete(id):
     return jsonify({'success': True})
 
 
+@bp.route('/complete/<int:id>', methods=['POST'])
+def complete(id):
+    feature_request = FeatureRequest.query.get(id)
+    client = feature_request.client
+    priority = feature_request.priority
+    feature_request.priority = 0
+    FeatureRequest.adjust_priorities(client, priority, -1)
+    db.session.commit()
+    return jsonify({'success': True})
+
+
 # TODO
 # ------------- bug: when adding multiple entries, then try to click one of the created, multiple rows were opened
 # ------------- add csrf checking on delete endpoint
