@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome/all.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/datepicker.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/notie.min.css') }}">
@@ -36,9 +36,6 @@
         }
         .item-highlight {
             background-color: #ffffc1;
-        }
-        .datepicker-panel {
-            z-index: 5000 !important;
         }
     </style>
     {{ JSGlue.include() }}
@@ -141,7 +138,7 @@
                                 <div class="col-6 text-right">
                                     <a class="btn btn-outline-warning btn-sm" href="#entryModal"
                                         data-toggle="modal" data-mode="edit" role="button"
-                                        data-bind="click: $root.loadSelectedItem"><i class="fa fa-pencil" aria-hidden="true"></i>
+                                        data-bind="click: $root.loadSelectedItem"><i class="fa fa-pencil-alt" aria-hidden="true"></i>
                                         Edit</a>
                                     <a class="btn btn-outline-danger btn-sm" href="#"role="button"
                                         data-bind="click: $root.removeRow"><i class="fa fa-times" aria-hidden="true"></i>
@@ -158,8 +155,6 @@
             <div class="alert alert-warning text-center" role="alert" data-bind="visible: active_entries().length == 0 && chosen_client()">
                 <i class="fa fa-exclamation-triangle"></i> No records yet, try creating one
             </div>
-
-            <input type="text" class="form-control" data-toggle="datepicker">
         </div>
 
         <div class="completedItems" data-bind="visible: showCompletedItems()">
@@ -261,13 +256,6 @@
                         </div>
                         <div class="form-group">
                             {{ form.target_date.label }} <small>(click the field to change)</small>
-                            {{ form.target_date(class="form-control",
-                                    data_toggle="datepicker",
-                                    required=True,
-                                    autocomplete="off",
-                                    placeholder="Pick a date") }}
-
-                            {#
                             <div class="input-group">
                                 <div class="input-group-append">
                                     <button type="button" class="btn btn-outline-secondary docs-datepicker-trigger">
@@ -276,12 +264,12 @@
                                 </div>
                                 {{ form.target_date(class="form-control",
                                     data_bind="value: target_date",
+                                    data_toggle="datepicker",
                                     required=True,
                                     autocomplete="off",
                                     readOnly=True,
                                     placeholder="Pick a date") }}
                             </div>
-                            #}
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -311,12 +299,12 @@
 
         $(function () {
             $('[data-toggle="tooltip"]').tooltip();
-            $('[data-toggle="datepicker"]').datepicker({
+            $('[data-toggle="datepicker2"]').datepicker({
                 autoHide: true,
                 autoPick: true,
                 date: startDate,
                 startDate: startDate,
-                zIndex: 2048
+                zIndex: 5000
             });
         });
 
@@ -438,6 +426,18 @@
 
                 });
             }
+            function initDatePicker() {
+                let pickerStartDate = (self.selected_item_editable().target_date() < startDate)?
+                        self.selected_item_editable().target_date():
+                        startDate;
+                $('[data-toggle="datepicker"]').datepicker({
+                    autoHide: true,
+                    autoPick: true,
+                    date: self.selected_item_editable().target_date(),
+                    startDate: pickerStartDate,
+                    zIndex: 2048
+                });
+            }
 
             //----------------
             // Events
@@ -471,10 +471,12 @@
                     client: self.chosen_client(),
                     target_date: startDate
                 }));
+                initDatePicker();
             }
             self.loadSelectedItem = function(item) {
                 self.selected_item(item);
                 self.selected_item_editable(new FeatureRequestRow(ko.toJS(item)));
+                initDatePicker();
             }
             self.removeRow = function(item) {
                 notie.confirm({ text: 'Are you sure to delete this record? <br>"'+ item.title() +'"' }, function() {
@@ -558,9 +560,19 @@
 
 
         //---------------- [BOOTSTRAP MODAL] ---------------------
-        $('#entryModal').on('hidden.bs.modal', function(e) {
-            fr_model.set_highlighted_priority();
-        });
+        $('#entryModal')
+            // .on('shown.bs.modal', function(e) {
+            //     $('[data-toggle="datepicker"]').datepicker({
+            //         autoHide: true,
+            //         autoPick: true,
+            //         // date: startDate,
+            //         startDate: startDate,
+            //         zIndex: 2048
+            //     });
+            // })
+            .on('hidden.bs.modal', function(e) {
+                fr_model.set_highlighted_priority();
+            });
 
 
         //---------------- [JQUERY DRAGGABLE] ---------------------
