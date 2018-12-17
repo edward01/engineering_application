@@ -110,8 +110,3 @@ def complete(id):
     FeatureRequest.adjust_priorities(client, priority, -1)
     db.session.commit()
     return jsonify({'success': True})
-
-
-# TODO
-# ------------- bug: when adding multiple entries, then try to click one of the created, multiple rows were opened
-# ------------- add csrf checking on delete endpoint

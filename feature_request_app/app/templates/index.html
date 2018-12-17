@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/datepicker.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/notie.min.css') }}">
+    <link href="{{ url_for('static', filename='favicon.ico') }}" rel="icon" type="image/x-icon" />
     <title>Feature Request App</title>
     <style>
         .notie-container {
@@ -23,9 +24,6 @@
             right: 20px;
             display:none;
         }
-        /* .datepicker-container {
-            z-index: 5000 !important;
-        } */
         .my-handle:hover {
             cursor: grab;
         }
@@ -36,9 +34,12 @@
             max-height: 350px;
             overflow-y:auto;
         }
-        /* .highlight-entry {
-            border: 2px solid #007bff;
-        } */
+        .item-highlight {
+            background-color: #ffffc1;
+        }
+        .datepicker-panel {
+            z-index: 5000 !important;
+        }
     </style>
     {{ JSGlue.include() }}
 </head>
@@ -103,7 +104,7 @@
     <div role="main" class="container col-md-8 offset-md-2 invisible">
         <div class="activeItems" data-bind="visible: !showCompletedItems()">
             <div class="accordion mt-2" id="accordionItems" data-bind="foreach: active_entries">
-                <div class="card mb-2">
+                <div class="card mb-2" data-bind="{css: {'item-highlight': is_highlighed}}">
                     <div class="card-header" data-bind="attr: { id: 'heading'+id }">
                         <div class="row">
                             <div class="col-12 col-md-8">
@@ -157,12 +158,14 @@
             <div class="alert alert-warning text-center" role="alert" data-bind="visible: active_entries().length == 0 && chosen_client()">
                 <i class="fa fa-exclamation-triangle"></i> No records yet, try creating one
             </div>
+
+            <input type="text" class="form-control" data-toggle="datepicker">
         </div>
 
         <div class="completedItems" data-bind="visible: showCompletedItems()">
-            <h4 class="alert alert-primary mt-2" role="alert">
+            <h5 class="alert alert-primary mt-2" role="alert">
                 <i class="fa fa-check" aria-hidden="true"></i> Completed Items
-            </h4>
+            </h5>
 
             <div class="accordion mt-2" id="accordionItems2" data-bind="foreach: completed_entries">
                 <div class="card mb-2">
@@ -258,6 +261,13 @@
                         </div>
                         <div class="form-group">
                             {{ form.target_date.label }} <small>(click the field to change)</small>
+                            {{ form.target_date(class="form-control",
+                                    data_toggle="datepicker",
+                                    required=True,
+                                    autocomplete="off",
+                                    placeholder="Pick a date") }}
+
+                            {#
                             <div class="input-group">
                                 <div class="input-group-append">
                                     <button type="button" class="btn btn-outline-secondary docs-datepicker-trigger">
@@ -271,6 +281,7 @@
                                     readOnly=True,
                                     placeholder="Pick a date") }}
                             </div>
+                            #}
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -299,15 +310,14 @@
         let startDate = moment().format('L');
 
         $(function () {
+            $('[data-toggle="tooltip"]').tooltip();
             $('[data-toggle="datepicker"]').datepicker({
                 autoHide: true,
                 autoPick: true,
                 date: startDate,
                 startDate: startDate,
-                zIndex: 1000,
-                trigger: '.docs-datepicker-trigger',
+                zIndex: 2048
             });
-            $('[data-toggle="tooltip"]').tooltip();
         });
 
 
@@ -321,6 +331,7 @@
             self.target_date = ko.observable();
             self.client = ko.observable();
             self.product_area = ko.observable();
+            self.is_highlighed = ko.observable(false);
 
             self.update = function(data) {
                 self.priority(data.priority);
@@ -354,6 +365,7 @@
             self.chosen_client = ko.observable();
             self.showLoader = ko.observable(true);
             self.showCompletedItems = ko.observable(false); // active|completed
+            self.highlighted_priority = 0;
 
             //----------------
             // Modal fields
@@ -390,9 +402,8 @@
                         self.goToClient(self.available_clients[elementPos]);
                 }
             }
-            function ajaxGet() {
+            function ajaxGet(callback) {
                 $.getJSON("/feature-requests/"+self.chosen_client(), function(data) {
-                    // let entries = $.map(data, function(item) { return new FeatureRequestRow(item) });
                     let active_entries = [];
                     let completed_entries = [];
                     $.each(data, function (ctr, item) {
@@ -404,6 +415,7 @@
                     self.showLoader(false);
                     $('.invisible').removeClass('invisible');
                     if ($('.navbar-collapse').hasClass('show')) $('.navbar-toggler').click();
+                    if (typeof callback !== 'undefined') callback();
                 });
             }
             function ajaxPost(options) {
@@ -433,6 +445,7 @@
             self.modalSubmit = function() {
                 if (typeof self.selected_item_editable().priority() == 'undefined' || self.selected_item_editable().priority() == '')
                     self.selected_item_editable().priority(self.active_entries().length + 1);
+                self.highlighted_priority = self.selected_item_editable().priority();
                 ajaxPost({
                     url: "{{ url_for('main.index') }}",
                     params: $('#formSubmit').serialize(),
@@ -488,6 +501,7 @@
                 });
             }
             self.dragNewPriority = function(current_priority, new_priority) {
+                self.highlighted_priority = new_priority;
                 ajaxPost({
                     url: "{{ url_for('main.update_priority') }}",
                     params: {
@@ -497,10 +511,18 @@
                         new_priority: new_priority
                     },
                     success_callback: function() {
-                        ajaxGet();
+                        ajaxGet(function() { fr_model.set_highlighted_priority(); });
                     },
                     success_message: 'Priority has been updated'
                 });
+            }
+            self.set_highlighted_priority = function() {
+                if (self.highlighted_priority == 0) return;
+                self.active_entries()[self.highlighted_priority-1].is_highlighed(true);
+                setTimeout(() => {
+                    self.active_entries()[self.highlighted_priority-1].is_highlighed(false);
+                    self.highlighted_priority = 0;
+                }, 3000);
             }
             self.goToClient = function(item) {
                 self.showLoader(true);
@@ -535,6 +557,12 @@
         });
 
 
+        //---------------- [BOOTSTRAP MODAL] ---------------------
+        $('#entryModal').on('hidden.bs.modal', function(e) {
+            fr_model.set_highlighted_priority();
+        });
+
+
         //---------------- [JQUERY DRAGGABLE] ---------------------
         var sortable_items = document.getElementById('accordionItems');
         Sortable.create(sortable_items, {
@@ -550,7 +578,7 @@
 </html>
 
 <!-- TODO
-    - completed/active items -> should be button dropdown
+    ------------- completed/active items -> should be button dropdown
     ------------- can accept empty priority => will assign last priority on backend
     ------------- draggable/sortable item rows
     ------------- client dropdown should come from model
@@ -558,7 +586,7 @@
     ------------- priority should be ???
     ------------- main records retrieval should be ajax, filtered already by selected client
     - BUG!! datepicker not showing
-    - [mark as complete] feature
+    ------------- [mark as complete] feature
     ------------- single page app, add # on end of url
     ------------- change alert into toastr notification
 -->
