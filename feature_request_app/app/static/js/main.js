@@ -79,7 +79,7 @@ function FeatureRequestsViewModel() {
         }
     }
     function ajaxGet(callback) {
-        $.getJSON(app_vars.urls.records.replace('client_arg', self.chosen_client()), function(data) {
+        $.getJSON(app_vars.url.records.replace('client_arg', self.chosen_client()), function(data) {
             let active_entries = [];
             let completed_entries = [];
             $.each(data, function (ctr, item) {
@@ -135,7 +135,7 @@ function FeatureRequestsViewModel() {
             self.selected_item_editable().priority(self.active_entries().length + 1);
         self.highlighted_priority = self.selected_item_editable().priority();
         ajaxPost({
-            url: app_vars.urls.upsert,
+            url: app_vars.url.upsert,
             params: $('#formSubmit').serialize(),
             success_callback: function(response) {
                 let selected_item = self.selected_item(),
@@ -169,7 +169,7 @@ function FeatureRequestsViewModel() {
     self.removeRow = function(item) {
         notie.confirm({ text: 'Are you sure to delete this record? <br>"'+ item.title() +'"' }, function() {
             ajaxPost({
-                url: app_vars.urls.delete.replace('0', item.id),
+                url: app_vars.url.delete.replace('0', item.id),
                 params: {csrf_token: app_vars.ct},
                 success_callback: function() {
                     ajaxGet();
@@ -181,7 +181,7 @@ function FeatureRequestsViewModel() {
     self.completeRow = function(item) {
         notie.confirm({ text: 'Mark this record as complete? <br>"'+ item.title() +'"' }, function() {
             ajaxPost({
-                url: app_vars.urls.complete.replace('0', item.id),
+                url: app_vars.url.complete.replace('0', item.id),
                 params: {csrf_token: app_vars.ct},
                 success_callback: function() {
                     ajaxGet();
@@ -193,7 +193,7 @@ function FeatureRequestsViewModel() {
     self.dragNewPriority = function(current_priority, new_priority) {
         self.highlighted_priority = new_priority;
         ajaxPost({
-            url: app_vars.urls.update_priority,
+            url: app_vars.url.update_priority,
             params: {
                 csrf_token: app_vars.ct,
                 client: self.chosen_client(),

@@ -285,7 +285,7 @@
         const app_vars = {
             data_choices: JSON.parse("{{ data_choices|safe }}".replace(/'/g, '"')),
             ct: "{{ csrf_token() }}",
-            urls: {
+            url: {
                 records: "{{ url_for('main.feature_requests', client='client_arg') }}",
                 upsert: "{{ url_for('main.index') }}",
                 update_priority: "{{ url_for('main.update_priority') }}",
