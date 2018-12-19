@@ -96,7 +96,8 @@ def delete(id):
     client = feature_request.client
     priority = feature_request.priority
     db.session.delete(feature_request)
-    FeatureRequest.adjust_priorities(client, priority, -1)
+    if priority > 0: # Adjust priorities only for active records
+        FeatureRequest.adjust_priorities(client, priority, -1)
     db.session.commit()
     return jsonify({'success': True})
 
