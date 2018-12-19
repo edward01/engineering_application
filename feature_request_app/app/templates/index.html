@@ -105,11 +105,6 @@
                             <div class="row">
                                 <div class="col-12 text-right">
                                     <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                                        <label class="btn btn-outline-success btn-sm" href="#"
-                                                data-bind="click: $root.completeRow">
-                                            <i class="far fa-thumbs-up" aria-hidden="true"></i>
-                                            Mark Complete
-                                        </label>
                                         <label class="btn btn-outline-warning btn-sm"
                                                 href="#entryModal"
                                                 data-toggle="modal" data-mode="edit" role="button"
@@ -121,6 +116,11 @@
                                                 data-bind="click: $root.removeRow">
                                             <i class="fa fa-times" aria-hidden="true"></i>
                                             Delete
+                                        </label>
+                                        <label class="btn btn-outline-success btn-sm" href="#"
+                                                data-bind="click: $root.completeRow">
+                                            <i class="far fa-thumbs-up" aria-hidden="true"></i>
+                                            Mark Complete
                                         </label>
                                     </div>
                                 </div>

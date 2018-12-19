@@ -143,7 +143,6 @@ function FeatureRequestsViewModel() {
                 if (response.update_priority) {
                     // refresh listing / insert mode
                     ajaxGet();
-                    self.setEmptyModal();
                 }
                 else {
                     // edit mode
