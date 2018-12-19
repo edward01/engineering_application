@@ -1,7 +1,7 @@
 Feature Request App
 ===================
 
-Developement Setup
+Development Setup
 ------------------
 ::
 
