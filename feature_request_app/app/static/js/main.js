@@ -113,9 +113,9 @@ function FeatureRequestsViewModel() {
                 type: 'error',
                 text: `<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
                         Processing failed, please try again later
-                        <a class="btn btn-secondary" href="/" role="button">
+                        <a class="btn btn-secondary" href="/#{chosen_client}" role="button">
                             <i class="fas fa-sync-alt"></i> Refresh
-                        </a>`,
+                        </a>`.replace('{chosen_client}', self.chosen_client()),
                 stay: true
             });
         }).always(function() {
