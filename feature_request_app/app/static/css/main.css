@@ -24,3 +24,6 @@ body > .container {
 .item-highlight {
     background-color: #ffffc1;
 }
+.description-div {
+    white-space: pre-wrap;
+}
