@@ -109,7 +109,15 @@ function FeatureRequestsViewModel() {
                 notie.alert({type: 'error', text: '<i class="fa fa-exclamation-circle" aria-hidden="true"></i> '+ errors, stay: true});
             }
         }).fail(function () {
-            notie.alert({type: 'error', text: '<i class="fa fa-exclamation-circle" aria-hidden="true"></i> Processing failed, please try again later', stay: true});
+            notie.alert({
+                type: 'error',
+                text: `<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                        Processing failed, please try again later
+                        <a class="btn btn-secondary" href="/" role="button">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </a>`,
+                stay: true
+            });
         }).always(function() {
 
         });
@@ -189,7 +197,7 @@ function FeatureRequestsViewModel() {
             });
         });
     }
-    self.dragNewPriority = function(current_priority, new_priority) {
+    self.dragNewPriority = function(current_priority, new_priority, $dragger_div) {
         self.highlighted_priority = new_priority;
         ajaxPost({
             url: app_vars.url.update_priority,
@@ -200,6 +208,7 @@ function FeatureRequestsViewModel() {
                 new_priority: new_priority
             },
             success_callback: function() {
+                $dragger_div.remove();
                 ajaxGet(function() { fr_model.set_highlighted_priority(); });
             },
             success_message: 'Priority has been updated'
@@ -260,8 +269,7 @@ var sortable_items = document.getElementById('accordionItems');
 Sortable.create(sortable_items, {
     handle: ".my-handle",
     onEnd: function (evt) {
-        fr_model.dragNewPriority(evt.oldIndex+1, evt.newIndex+1);
-        $(evt.item).remove();
+        fr_model.dragNewPriority(evt.oldIndex+1, evt.newIndex+1, $(evt.item));
     },
 });
 
