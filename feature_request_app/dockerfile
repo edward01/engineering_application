@@ -1,0 +1,23 @@
+FROM python:3.7-alpine
+
+RUN adduser -D fr_app
+
+WORKDIR /home/fr_app
+
+COPY requirements.txt requirements.txt
+RUN python -m venv venv
+RUN venv/bin/pip install -r requirements.txt
+RUN venv/bin/pip install gunicorn pymysql
+
+COPY app app
+COPY migrations migrations
+COPY wsgi.py config.py boot.sh ./
+RUN chmod +x boot.sh
+
+ENV FLASK_APP wsgi.py
+
+RUN chown -R fr_app:fr_app ./
+USER fr_app
+
+EXPOSE 5000
+ENTRYPOINT ["./boot.sh"]
